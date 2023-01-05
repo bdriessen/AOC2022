@@ -11,7 +11,7 @@ import numpy as np
 class Token:
     token0 = np.array([[1, 1, 1, 1]])
     token1 = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
-    token2 = np.array([[0, 0, 1], [0, 0, 1], [1, 1, 1]])
+    token2 = np.array([[1, 1, 1], [0, 0, 1], [0, 0, 1]])
     token3 = np.array([[1], [1], [1], [1]])
     token4 = np.array([[1, 1], [1, 1]])
 
@@ -19,14 +19,30 @@ class Token:
 
         if nr == 0:
             self.token = self.token0
+            self.low = [0, 0, 0, 0]
+            self.left = [0]
+            self.right = [3]
         elif nr == 1:
             self.token = self.token1
+            self.low = [1, 2, 1]
+            self.left = [1, 0, 1]
+            self.right = [1, 2, 1]
         elif nr == 2:
             self.token = self.token2
+            self.low = [2, 2, 2]
+            self.left = [2, 2, 0]
+            self.right = [2, 2, 0]
+
         elif nr == 3:
             self.token = self.token3
+            self.low = [3]
+            self.left = [0,0,0,0]
+            self.right = [0,0,0,0]
         elif nr == 4:
             self.token = self.token4
+            self.low = [1, 1]
+            self.left = [0, 0]
+            self.right = [1, 1]
         self.x = 2
         self.y = top + 3 + self.token.shape[0]
 
@@ -64,7 +80,7 @@ class Tower:
 
     def can_move_down(self, token):
         for col in range(token.x, token.x + token.token.shape[1]):
-            if self.tower_tops[col] >= token.y - token.token.shape[0] - 1:
+            if self.tower_tops[col] >= token.y - token.token.shape[0] + token.low[col-token.x] - 1:
                 return False
         return True
 
@@ -75,30 +91,40 @@ class Tower:
         return
 
     def update_tower(self, token):
-        for col in range(token.x, token.x + token.token.shape[1]):
-            for row in range(token.y - token.token.shape[0], token.y + 1):
-                self.tower[row, col] = token.token[row, col]
+        for row in range(token.token.shape[0]):
+            for col in range(token.x, token.x + token.token.shape[1]):
+                self.tower[token.y - token.token.shape[0] + row, col] = token.token[row, col-token.x]
             # Update tower_tops as maximum index of 1 in each column
-            self.tower_tops[col] = np.max(np.where(self.tower[:, col] == 1))
+            for col in range(self.tower.shape[1]):
+                # Find highest rownumber with 1 in this column
+                self.tower_tops[col] = self.tower.shape[0] - np.argmax(self.tower[::-1, col] == 1) - 1
+        print("Tower tops updated ", self.tower_tops)
         return
 
     def simulate(self):
         tkn = 0
         while tkn < 5:
             token = Token(tkn, self.tower_tops[tkn % 5])
-            token.vel(1, 0)
+            token.vel(-1, 0)
             token.state = "moving"
-            while self.next_token.state == "moving":
+            extra_rows = token.y - self.tower.shape[0]
+            if extra_rows > 0:
+                self.tower = np.vstack((self.tower, np.zeros((extra_rows, 7), dtype=int)))
+
+            while token.state == "moving":
                 if self.can_move_down(token):
                     token.state = "moving"
                 else:
                     token.vel(0, 0)
                     token.state = "landed"
+
                 token.move()
-                self.update_tower(token)
+
                 if token.state == "landed":
+                    self.update_tower(token)
                     tkn += 1
-                    del token
+
+
                 print(self.tower)
         return
 
