@@ -30,6 +30,9 @@ class Token:
 
 
         self.state = "idle" # idle, moving, landed
+        self.Vx = 0
+        self.Vy = 0
+
         return
 
     def vel(self, Vy, Vx):
@@ -42,22 +45,6 @@ class Token:
         self.x += self.Vx
         return
 
-    def can_move_down(self, tower_tops):
-
-        # Onderstaande code is niet correct
-        tower_mat = np.array(tower[self.y + self.token.shape[0] - 1, self.x:self.x + self.token.shape[1]])
-        if tower_mat * self.token[-1, :] != 0:
-            return False
-
-        return True
-
-    def can_move_left(self, tower_tops):
-
-        return True
-
-
-    def can_move_right(self, tower_tops):
-        return
 
     def __str__(self):
         return str(self.token)
@@ -65,11 +52,56 @@ class Token:
 
 
 class Tower:
-    def __init__(self, name, weight, children):
+    def __init__(self):
         self.height = 0
-
+        self.tower = np.ones((1, 7), dtype=int)
+        print("self.tower", self.tower)
+        self.tower_tops = np.zeros(7, dtype=int)
+        print("self.tower_tops", self.tower_tops)
+        self.next_token = Token(0,0)
     def __str__(self):
         return "Tower height: " + str(self.height)
+
+    def can_move_down(self, token):
+        for col in range(token.x, token.x + token.token.shape[1]):
+            if self.tower_tops[col] >= token.y-token.token.shape[0]-1:
+                return False
+        return True
+
+    def can_move_left(self, tower_tops):
+        return
+
+
+    def can_move_right(self, tower_tops):
+        return
+
+    def update_tower(self, token):
+        for col in range(token.x, token.x + token.token.shape[1]):
+            for row in range(token.y-token.token.shape[0], token.y + 1):
+                self.tower[row, col] = token.token[row, col]
+            # Update tower_tops as maximum index of 1 in each column
+            self.tower_tops[col] = np.max(np.where(self.tower[:, col] == 1))
+        return
+
+    def simulate(self):
+        tkn = 0
+        while tkn < 5:
+            token = Token(tkn, self.tower_tops[tkn%5])
+            token.vel(1, 0)
+            token.state = "moving"
+            while token.state == "moving":
+                if self.can_move_down(token):
+                    token.state = "moving"
+                else:
+                    token.vel(0, 0)
+                    token.state = "landed"
+                token.move()
+                self.update_tower(token)
+                if token.state == "landed":
+                    tkn += 1
+                    del token
+                print(self.tower)
+        return
 
 
 
@@ -92,12 +124,14 @@ def part1(fn):
     res = read_input_file(fn)
 
 
-    tokens = []
-    for i in range(5):
-        tokens.append(Token(i, 0))
-        print(tokens[i])
-        print(tokens[i].token.shape)
-        print("Pos y: ", tokens[i].y)
+    # tokens = []
+    # for i in range(5):
+    #     tokens.append(Token(i, 0))
+    #     print(tokens[i])
+    #     print(tokens[i].token.shape)
+    #     print("Pos y: ", tokens[i].y)
+    tower = Tower()
+    tower.simulate()
 
     return 0
 
@@ -120,17 +154,6 @@ def main(realinput):
 
 if __name__ == "__main__":
 
-    testrun = True
-#    testrun = False
-
-    if testrun:
-        res1 = part1("testinput.txt")
-#        res2 = part2("testinput.txt")
-#        print("Part 2: ", res2)
-    else:
-        res1 = part1("input.txt")
-        print("Part 1: ", res1)
-#        res2 = part2("input.txt")
-#        print("Part 2: ", res2)
-
+#    main(True)
+    main(False)
 
