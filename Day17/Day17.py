@@ -20,27 +20,32 @@ class Token:
         if nr == 0:
             self.token = self.token0
             self.low = [0, 0, 0, 0]
+            self.high = [0, 0, 0, 0]
             self.left = [0]
             self.right = [3]
         elif nr == 1:
             self.token = self.token1
-            self.low = [1, 2, 1]
+            self.low = [1, 0, 1]
+            self.high = [1, 2, 1]
             self.left = [1, 0, 1]
             self.right = [1, 2, 1]
         elif nr == 2:
             self.token = self.token2
-            self.low = [2, 2, 2]
-            self.left = [2, 2, 0]
-            self.right = [2, 2, 0]
+            self.low = [0, 0, 0]
+            self.high = [0, 0, 2]
+            self.left = [0, 2, 2]
+            self.right = [2, 2, 2]
 
         elif nr == 3:
             self.token = self.token3
-            self.low = [3]
+            self.low = [0]
+            self.high = [3]
             self.left = [0,0,0,0]
             self.right = [0,0,0,0]
         elif nr == 4:
             self.token = self.token4
-            self.low = [1, 1]
+            self.low = [0, 0]
+            self.high = [1, 1]
             self.left = [0, 0]
             self.right = [1, 1]
         self.x = 2
@@ -91,20 +96,20 @@ class Tower:
         return
 
     def update_tower(self, token):
-        for row in range(token.token.shape[0]):
+        for row in range(token.y, token.y + token.token.shape[0]):
             for col in range(token.x, token.x + token.token.shape[1]):
-                self.tower[token.y - token.token.shape[0] + row, col] = token.token[row, col-token.x]
+                self.tower[row, col] = token.token[row-token.y, col-token.x]
             # Update tower_tops as maximum index of 1 in each column
             for col in range(self.tower.shape[1]):
                 # Find highest rownumber with 1 in this column
-                self.tower_tops[col] = self.tower.shape[0] - np.argmax(self.tower[::-1, col] == 1) - 1
+                self.tower_tops[col] = token.y + token.high[col]
         print("Tower tops updated ", self.tower_tops)
         return
 
     def simulate(self):
         tkn = 0
         while tkn < 5:
-            token = Token(tkn, self.tower_tops[tkn % 5])
+            token = Token(tkn % 5, np.max(self.tower_tops))
             token.vel(-1, 0)
             token.state = "moving"
             extra_rows = token.y - self.tower.shape[0]
