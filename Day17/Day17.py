@@ -49,7 +49,7 @@ class Token:
             self.left = [0, 0]
             self.right = [1, 1]
         self.x = 2
-        self.y = top + 3 + self.token.shape[0]
+        self.y = top + 3
 
         self.state = "idle"  # idle, moving, landed
         self.vx = 0
@@ -85,7 +85,7 @@ class Tower:
 
     def can_move_down(self, token):
         for col in range(token.x, token.x + token.token.shape[1]):
-            if self.tower_tops[col] >= token.y - token.token.shape[0] + token.low[col-token.x] - 1:
+            if token.y + token.low[col-token.x] <= self.tower_tops[col]+1:
                 return False
         return True
 
@@ -97,22 +97,26 @@ class Tower:
 
     def update_tower(self, token):
         for row in range(token.y, token.y + token.token.shape[0]):
-            for col in range(token.x, token.x + token.token.shape[1]):
-                self.tower[row, col] = token.token[row-token.y, col-token.x]
+            for col in range(token.token.shape[1]):
+                if token.token[row - token.y, col] == 1:
+                    self.tower[row, token.x + col] = 1
             # Update tower_tops as maximum index of 1 in each column
-            for col in range(self.tower.shape[1]):
+            for col in range(token.token.shape[1]):
                 # Find highest rownumber with 1 in this column
-                self.tower_tops[col] = token.y + token.high[col]
+                self.tower_tops[col+token.x] = token.y + token.high[col]
         print("Tower tops updated ", self.tower_tops)
         return
 
     def simulate(self):
         tkn = 0
         while tkn < 5:
+            # calculate max of tower_tops
+
             token = Token(tkn % 5, np.max(self.tower_tops))
+            print("New token: ", tkn % 5)
             token.vel(-1, 0)
             token.state = "moving"
-            extra_rows = token.y - self.tower.shape[0]
+            extra_rows = token.y + token.token.shape[0] - self.tower.shape[0]
             if extra_rows > 0:
                 self.tower = np.vstack((self.tower, np.zeros((extra_rows, 7), dtype=int)))
 
