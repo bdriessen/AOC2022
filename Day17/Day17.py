@@ -80,6 +80,7 @@ class Tower:
         print("self.tower_tops", self.tower_tops)
         self.next_token = Token(0, 0)
         self.throttle = line
+        self.offset = 0
 
     def __str__(self):
         return "Tower height: " + str(self.height)
@@ -166,6 +167,21 @@ class Tower:
                 if token.state == "landed":
                     self.update_tower(token)
                     tkn += 1
+            if tkn % 1000 == 0:
+                # find rows with all 1's
+                rows_to_delete = []
+                rownr = 0
+                for row in range(self.tower.shape[0]):
+                    if np.all(self.tower[row, :] == 1):
+                        rows_to_delete.append(rownr)
+                    rownr += 1
+                if len(rows_to_delete) > 0:
+                    indexnr = rows_to_delete[-1]
+                    # Delete all rows below indexnr
+                    self.tower = np.delete(self.tower, np.s_[indexnr:], axis=0)
+                    self.offset += indexnr
+                    # tot hier...
+
 #                if throttle_index > 879:
 #                    print("Raar")
 
