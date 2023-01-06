@@ -74,7 +74,7 @@ class Token:
 class Tower:
     def __init__(self, line):
         self.height = 0
-        self.tower = np.ones((1, 7), dtype=int)
+        self.tower = np.ones((1, 7), dtype=np.int8)
         print("self.tower", self.tower)
         self.tower_tops = np.zeros(7, dtype=int)
         print("self.tower_tops", self.tower_tops)
@@ -129,20 +129,33 @@ class Tower:
         return
 
     def simulate(self):
+        tokenlist = []
+        tokenlist.append(Token(0, 0))
+        tokenlist.append(Token(1, 0))
+        tokenlist.append(Token(2, 0))
+        tokenlist.append(Token(3, 0))
+        tokenlist.append(Token(4, 0))
+
         tkn = 0
         throttle_index = 0
-        while tkn < 2022:
-            if tkn % 1000 == 0:
+        while tkn < 1000000000000:
+#        while tkn < 2022:
+            if tkn % 100000 == 0:
                 print("tkn", tkn)
+                print("Length of tower", len(self.tower))
             # calculate max of tower_tops
+            token = tokenlist[tkn % 5]
+            token.x = 2
+            token.y = self.tower_tops.max() + 3 + 1
 
-            token = Token(tkn % 5, np.max(self.tower_tops))
+#            token = Token(tkn % 5, np.max(self.tower_tops))
 #            print("New token: ", tkn % 5)
             token.vel(0, 0)
             token.state = "moving"
             extra_rows = token.y + token.token.shape[0] - self.tower.shape[0]
             if extra_rows > 0:
-                self.tower = np.vstack((self.tower, np.zeros((extra_rows, 7), dtype=int)))
+                self.tower = np.vstack((self.tower, np.zeros((extra_rows, 7), dtype=np.int8)))
+
 
             while token.state == "moving":
                 throttle = self.throttle[throttle_index]
@@ -167,26 +180,29 @@ class Tower:
                 if token.state == "landed":
                     self.update_tower(token)
                     tkn += 1
-            if tkn % 1000 == 0:
-                # find rows with all 1's
-                rows_to_delete = []
-                rownr = 0
-                for row in range(self.tower.shape[0]):
-                    if np.all(self.tower[row, :] == 1):
-                        rows_to_delete.append(rownr)
-                    rownr += 1
-                if len(rows_to_delete) > 0:
-                    indexnr = rows_to_delete[-1]
-                    # Delete all rows below indexnr
-                    self.tower = np.delete(self.tower, np.s_[0:indexnr], axis=0)
-                    self.offset += indexnr
-                    # tot hier...
+#            del token
 
-#                if throttle_index > 879:
-#                    print("Raar")
+            if tkn % 100 == 0:
+                 # find rows with all 1's
+                 rows = []
+                 for row in range(1, self.tower.shape[0]):
+                     if np.sum(self.tower[row, :]) == 7:
+                         rows.append(row)
+                 if len(rows) > 0:
+
+                     highest_row = np.max(rows)
+
+                     # delete all rows from 0 to highest_row, and keep highest_row
+
+                     self.tower = self.tower[highest_row:, :]
+
+                     self.offset += highest_row
+                     self.tower_tops -= highest_row
+#                     print("Removed rows. Highest row is now:", self.tower.shape[0] - 1)
+
 
 #            print(self.tower)
-        print("Tower height: ", np.max(self.tower_tops))
+        print("Tower height: ", np.max(self.tower_tops)+self.offset)
         # Print maximum x value of tower
 
         # find rows with only 1's
@@ -201,7 +217,7 @@ class Tower:
 # Read input file
 def read_input_file(fn):
     # Read single line input file and store in list
-    with open(fn, "r", encoding="utf-8") as f:
+    with open(fn, "r") as f:
         line = f.readline().strip()
         print("Length of input file: ", len(line))
     return line
@@ -224,9 +240,9 @@ def part2(fn):
 
 def main(realinput):
     if realinput:
-        fn = "./input.txt"
+        fn = "Day17/input.txt"
     else:
-        fn = "./testinput.txt"
+        fn = "Day17/testinput.txt"
 
     res1 = part1(fn)
     print("Part 1: ", res1)
@@ -237,4 +253,5 @@ def main(realinput):
 
 if __name__ == "__main__":
     #    main(True)
-    main(True)
+    #    main(False)
+    pass
