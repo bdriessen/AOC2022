@@ -10,7 +10,7 @@ from Day17 import Day17
 def main():
     # Read input file
 #    Day13.main(True)
-    Day17.main(False)
+    Day17.main(True)
     return
 
 if __name__ == "__main__":
