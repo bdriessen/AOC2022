@@ -178,7 +178,7 @@ class Tower:
                 if len(rows_to_delete) > 0:
                     indexnr = rows_to_delete[-1]
                     # Delete all rows below indexnr
-                    self.tower = np.delete(self.tower, np.s_[indexnr:], axis=0)
+                    self.tower = np.delete(self.tower, np.s_[0:indexnr], axis=0)
                     self.offset += indexnr
                     # tot hier...
 
