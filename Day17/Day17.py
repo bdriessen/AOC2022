@@ -88,6 +88,8 @@ class Tower:
         self.tower = np.ones((1, 7), dtype=np.int8)
         print("self.tower", self.tower)
         self.tower_tops = np.zeros(7, dtype=int)
+        self.old_tower_height = 0
+        self.tkn_old = 0
         print("self.tower_tops", self.tower_tops)
         self.next_token = Token(0, 0)
         self.throttle = line
@@ -166,13 +168,19 @@ class Tower:
 #        while tkn < 2022:
             if tkn % 100000 == 0:
                 print("tkn", tkn)
-                print("Length of tower", len(self.tower))
             # calculate max of tower_tops
             token = tokenlist[tkn % 5]
             token.x = 2
             token.y = self.tower_tops.max() + 3 + 1
 
-#            token = Token(tkn % 5, np.max(self.tower_tops))
+
+            if tkn-self.tkn_old == 16:
+                print("Tower height after 15 additions: ", self.tower_tops.max()-self.old_tower_height)
+
+
+
+
+    #            token = Token(tkn % 5, np.max(self.tower_tops))
 #            print("New token: ", tkn % 5)
             token.vel(0, 0)
             token.state = "moving"
@@ -181,10 +189,17 @@ class Tower:
                 self.tower = np.vstack((self.tower, np.zeros((extra_rows, 7), dtype=np.int8)))
 
 
+
             while token.state == "moving":
                 throttle = self.throttle[throttle_index]
 #                print("Throttle: ", throttle)
                 throttle_index += 1
+                if throttle_index == len(self.throttle):
+                    print("Length of tower in cycle", max(self.tower_tops) - self.old_tower_height)
+                    print("Number of tokens in cycle", tkn-self.tkn_old)
+                    self.old_tower_height = max(self.tower_tops)
+                    self.tkn_old = tkn
+
                 throttle_index = throttle_index % len(self.throttle)
 
                 if throttle == '<' and self.can_move_left(token):
@@ -204,30 +219,30 @@ class Tower:
                 if token.state == "landed":
                     self.update_tower(token)
                     tkn += 1
-#            del token
-            self.plot(20, 10)
+
+#            self.plot(20, 10)
 
 
-            if tkn % 100 == 0:
-                 # find rows with all 1's
-                 rows = []
-                 for row in range(1, self.tower.shape[0]):
-                     if np.sum(self.tower[row, :]) == 7:
-                         rows.append(row)
-                 if len(rows) > 0:
+#             if tkn % 100 == 0:
+#                  # find rows with all 1's
+#                  rows = []
+#                  for row in range(1, self.tower.shape[0]):
+#                      if np.sum(self.tower[row, :]) == 7:
+#                          rows.append(row)
+#                  if len(rows) > 0:
+#
+#                      highest_row = np.max(rows)
+#
+#                      # delete all rows from 0 to highest_row, and keep highest_row
+#
+#                      self.tower = self.tower[highest_row:, :]
+#
+#                      self.offset += highest_row
+#                      self.tower_tops -= highest_row
+# #                     print("Removed rows. Highest row is now:", self.tower.shape[0] - 1)
 
-                     highest_row = np.max(rows)
-
-                     # delete all rows from 0 to highest_row, and keep highest_row
-
-                     self.tower = self.tower[highest_row:, :]
-
-                     self.offset += highest_row
-                     self.tower_tops -= highest_row
-#                     print("Removed rows. Highest row is now:", self.tower.shape[0] - 1)
 
 
-#            print(self.tower)
 
         print("Tower height: ", np.max(self.tower_tops)+self.offset)
         # Print maximum x value of tower
