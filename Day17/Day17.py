@@ -6,6 +6,17 @@
 #
 
 import numpy as np
+from os import system, name
+import time
+
+def clear():
+    # for windows
+    if name == 'nt':
+        _ = system('cls')
+
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
 
 
 class Token:
@@ -124,9 +135,22 @@ class Tower:
                 if token.y + token.high[col] > self.tower_tops[token.x + col]:
                     self.tower_tops[token.x + col] = token.y + token.high[col]
 #        print("Tower tops updated ", self.tower_tops)
-
-
         return
+
+    def plot(self, nrows, ncols):
+        clear()
+        for plotrow in range(nrows):
+            towerstr = ""
+            for plotcol in range(ncols):
+                towerrow = nrows*ncols - 1 - plotcol*nrows - plotrow
+                if towerrow < len(self.tower):
+                    towerstr += str(self.tower[towerrow, :])
+                else:
+                    towerstr += "_" * 15
+            print(towerstr)
+        time.sleep(0.1)
+        return
+
 
     def simulate(self):
         tokenlist = []
@@ -181,6 +205,8 @@ class Tower:
                     self.update_tower(token)
                     tkn += 1
 #            del token
+            self.plot(20, 10)
+
 
             if tkn % 100 == 0:
                  # find rows with all 1's
@@ -202,6 +228,7 @@ class Tower:
 
 
 #            print(self.tower)
+
         print("Tower height: ", np.max(self.tower_tops)+self.offset)
         # Print maximum x value of tower
 
