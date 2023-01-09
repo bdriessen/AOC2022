@@ -277,17 +277,25 @@ def part1(fn):
 
 # Part 2
 def part2(fn):
+    delta_height = 2616
+    delta_tkn = 1715
+    tkn_target = 1000000000000
+    cycles = tkn_target // delta_tkn
+    cycle_remainder = tkn_target - cycles*delta_tkn
+    print("Full cycles: ", cycles)
+    print("Remainder: ", cycle_remainder)
+    print("Height after full cycles: ", cycles*delta_height)
+    print("Total height: ", cycles*delta_height + 22 + 1)
+
     return 0
-
-
 def main(realinput):
     if realinput:
         fn = "Day17/input.txt"
     else:
         fn = "Day17/testinput.txt"
 
-    res1 = part1(fn)
-    print("Part 1: ", res1)
+#    res1 = part1(fn)
+#    print("Part 1: ", res1)
     res2 = part2(fn)
     print("Part 2: ", res2)
     return
