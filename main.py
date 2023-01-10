@@ -5,12 +5,12 @@
 # Date: 2022-01-05
 #
 
-from Day17 import Day17
+from Day18 import Day18
 
 def main():
     # Read input file
 #    Day13.main(True)
-    Day17.main(False)
+    Day18.main(True)
     return
 
 if __name__ == "__main__":
