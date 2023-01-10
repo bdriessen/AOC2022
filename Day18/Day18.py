@@ -113,6 +113,13 @@ def find_air(cubes):
             min_z = cube[2]
         if cube[2] > max_z:
             max_z = cube[2]
+    min_x -= 1
+    min_y -= 1
+    min_z -= 1
+
+    max_x += 1
+    max_y += 1
+    max_z += 1
 
     # Find all coordinates that are not cubes
     coords_air_outside = [[0, 0, 0]]
