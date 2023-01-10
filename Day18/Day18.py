@@ -48,7 +48,7 @@ def read_input_file(fn):
 
 def parse_input(coords):
     voxels = []
-    print(coords)
+#    print(coords)
     for coord in coords:
         voxel = Voxel(coord[0], coord[1], coord[2])
         voxels.append(voxel)
@@ -113,13 +113,13 @@ def find_air(cubes):
             min_z = cube[2]
         if cube[2] > max_z:
             max_z = cube[2]
-    min_x -= 1
-    min_y -= 1
-    min_z -= 1
+    min_x -= 3  # Add some extra space to make sure we don't miss any cubes
+    min_y -= 3
+    min_z -= 3
 
-    max_x += 1
-    max_y += 1
-    max_z += 1
+    max_x += 3
+    max_y += 3
+    max_z += 3
 
     # Find all coordinates that are not cubes
     coords_air_outside = [[0, 0, 0]]
