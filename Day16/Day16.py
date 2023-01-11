@@ -56,6 +56,60 @@ def clean_graph(graph):
         newgraph.remove_node(node)
     return newgraph
 
+def solution_possible(time, maxrate, pressure_release, best_pressure_release):
+    if pressure_release + (30-time)*maxrate < best_pressure_release:
+        # This solution cannot be better than the best solution found so far
+        return False
+    else:
+        return True
+
+
+def solve(graph, sh_pths, time, rate, maxrate, pressure_release, best_pressure_release, solution):
+    nodes = list(graph.nodes())
+    nodes.sort()
+    old_time = time
+    old_pressure_release = pressure_release
+    old_rate = rate
+
+    # Extend solution
+    last_node = solution[-1]
+    for node in nodes:
+        if node not in solution:
+            # Try to add node to solution
+            # Calculate path to next node
+            path = sh_pths[last_node][node]
+
+            # Calculate time to next node
+            last_path_node = path[0]
+            delta_time = 0
+            for path_node in path[1:]:
+                delta_time += graph.get_edge_data(last_path_node, path_node)['weight']
+                last_path_node = path_node
+            new_time = time + delta_time
+            new_pressure_release = pressure_release + delta_time * rate   # This is the pressure release after we reached the new location
+
+            # Open the valve if we are at the end of the path
+            new_time += 1
+            new_pressure_release += rate  # Note that the new rate will only become effective after the valve has been opened
+            new_rate = rate + graph.nodes[node]['rate']
+
+            # Check if this solution is possible
+            if solution_possible(new_time, maxrate, pressure_release, best_pressure_release):
+                solution.append(node)
+                solution = solve(graph, sh_pths, new_time, new_rate, new_pressure_release, best_pressure_release, solution)
+
+    # We have found a solution
+    if len(solution) == len(graph.nodes()):  # I guess this is not necessary
+        # Calculate the pressure release
+        if pressure_release > best_pressure_release:
+            best_pressure_release = pressure_release
+            print("Found a new best solution: ", solution, "with pressure release: ", pressure_release)
+
+    return solution
+
+
+
+
 
 
 # Part 1
@@ -70,20 +124,23 @@ def part1(fn):
 
     cleanG = clean_graph(G)
 
-    pos = nx.spring_layout(cleanG)
-    pos2 = nx.spring_layout(G)
+    # Find the sum of the rates of all nodes
+    maxrate = 0
+    for node in cleanG.nodes():
+        maxrate += cleanG.nodes[node]['rate']
 
+    # Find all shortest paths in the graph
+    shortest_paths = nx.shortest_path(cleanG, weight='weight')
+#    print("A shortest paths: ", shortest_paths['AA']['HH'])
+
+
+
+
+    pos = nx.spring_layout(cleanG)
 
     nx.draw(cleanG, pos, with_labels=True)
     edge_labels = nx.get_edge_attributes(cleanG, 'weight')
     nx.draw_networkx_edge_labels(cleanG, pos, edge_labels=edge_labels)
-
-    # for k, v in pos2.items():
-    #     # Shift the x values of every node by 10 to the right
-    #     v[0] = v[0] + 10
-    # nx.draw(G, pos2, with_labels=True)
-    # edge_labels = nx.get_edge_attributes(G, 'weight')
-    # nx.draw_networkx_edge_labels(G, pos2, edge_labels=edge_labels)
 
 
     plt.show()
