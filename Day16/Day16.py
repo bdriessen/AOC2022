@@ -38,14 +38,14 @@ def parse_input():
 def clean_graph(graph):
     # remove all nodes with 2 negihbors and a rate of 0
     newgraph = graph.copy()
-#    print("Now checking: ", list(graph.nodes(data=True)))
+    #    print("Now checking: ", list(graph.nodes(data=True)))
     nodes_to_remove = []
     for node in graph.nodes():
         if graph.nodes[node]["rate"] == 0 and len(list(graph.neighbors(node))) == 2:
             nodes_to_remove.append(node)
-#            print("Found node to remove: ", node)
+    #            print("Found node to remove: ", node)
 
-#    print("Nodes to remove: ", nodes_to_remove)
+    #    print("Nodes to remove: ", nodes_to_remove)
     for node in nodes_to_remove:
         neighbors = list(newgraph.neighbors(node))
         newweight = newgraph.get_edge_data(neighbors[0], node)['weight'] + newgraph.get_edge_data(neighbors[1], node)[
@@ -85,58 +85,53 @@ def solve(state, solution):
     solution_res = solution.copy()
 
     # Extend solution
+    solution_new = solution.copy()
     last_node = solution[-1]
-    for node in nodes:
-        if node not in solution:
-            # Try to add node to solution
-            # Calculate path to next node
-            solution.append(node)
-            solution_res = solution.copy()
+    for node in [n for n in nodes if n not in solution]:
+        # Try to add node to solution
+        # Calculate path to next node
+        solution_new.append(node)
+        print("Trying to extend solution with node: ", node, ", giving solution: ", solution_new)
 
-            path = state["sh_pths"][last_node][node]
+        path = state["sh_pths"][last_node][node]
 
-            # Calculate time to next node
-            last_path_node = path[0]
-            delta_time = 0
-            for path_node in path[1:]:
-                delta_time += graph.get_edge_data(last_path_node, path_node)['weight']
-                last_path_node = path_node
-            new_time = time + delta_time
-            new_pressure_release = pressure_release + delta_time * rate
-            # This is the pressure release after we reached the new location
+        # Calculate time to next node
+        last_path_node = path[0]
+        delta_time = 0
+        for path_node in path[1:]:
+            delta_time += graph.get_edge_data(last_path_node, path_node)['weight']
+            last_path_node = path_node
+        new_time = time + delta_time
+        # Pressure release after we reached the new location
+        new_pressure_release = pressure_release + delta_time * rate
 
-            # Open the valve if we are at the end of the path
-            new_time += 1
-            new_pressure_release += rate
-            # Note that the new rate will only become effective after the valve has been opened
-            new_rate = rate + graph.nodes[node]['rate']
+        # Open the valve if we are at the end of the path
+        new_time += 1
+        new_pressure_release += rate
+        # Note that the new rate will only become effective after the valve has been opened
+        new_rate = rate + graph.nodes[node]['rate']
 
-            # Check if this solution can result in a better solution
-            if solution_possible(new_time, maxrate, pressure_release, best_pressure_release):
-                state_new = {'graph': graph, 'sh_pths': sh_pths,
-                             'time': new_time, 'rate': new_rate, 'maxrate': maxrate,
-                             'pressure_release': new_pressure_release,
-                             'best_pressure_release': best_pressure_release}
-                state_res, solution_res = solve(state_new, solution)
+        # Check if this solution can result in a better solution
+        if solution_possible(new_time, maxrate, pressure_release, best_pressure_release):
+            state_new = {'graph': graph, 'sh_pths': sh_pths,
+                         'time': new_time, 'rate': new_rate, 'maxrate': maxrate,
+                         'pressure_release': new_pressure_release,
+                         'best_pressure_release': best_pressure_release}
+            state_res, solution_res = solve(state_new, solution_new)
 
-                # If solution is complete, check if it is better than the best solution found so far
-                if len(solution_res) == len(graph.nodes()):
-                    if state_res["pressure_release"]+(30-new_time)*maxrate > state_res["best_pressure_release"]:
-                        state_res["best_pressure_release"] = state_res["pressure_release"]+(30-new_time)*maxrate
-                        print("New best solution found: ", solution_res, "with pressure release: ",
-                              state_res["best_pressure_release"])
-            else:
-                # This solution cannot be better than the best solution found so far
-#                state_res = state.copy()
-#                solution_res = solution.copy()
-                pass
+        # If solution is complete, check if it is better than the best solution found so far
+        if len(solution_res) == len(graph.nodes()):
+            if state_res["pressure_release"] + (30 - new_time) * maxrate > state_res["best_pressure_release"]:
+                state_res["best_pressure_release"] = state_res["pressure_release"] + (30 - new_time) * maxrate
+                print("New best solution found: ", solution_res, "with pressure release: ",
+                      state_res["best_pressure_release"])
 
-            solution.pop()
-
+        #  Go back to previous state and try next node
+#        solution_new.pop()
+        lastnode = solution[-1]
 
     # We finished checking all nodes, so we are done with this length of solution
     # Restore state
-
 
     return state_res, solution_res
 
@@ -169,12 +164,12 @@ def part1(fn):
     state, solution = solve(state, solution)
 
     pos = nx.spring_layout(cleanG)
-
+    nx.draw(cleanG, pos, with_labels=False)
     node_lable = {}
     for node in cleanG.nodes():
-        node_lable.append(dict(node, node + ":" + str(cleanG.nodes[node]['rate'])))
-        node_lable[node] = node + ":" + str(cleanG.nodes[node]['rate'])
-    nx.draw_networkx_labels(cleanG, pos, labels=node_lable)
+        node_lable[node] = str(node) + ": " + str(cleanG.nodes[node]['rate'])
+
+    nx.draw_networkx_labels(cleanG, pos, labels=node_lable, font_size=8)
 
     edge_labels = nx.get_edge_attributes(cleanG, 'weight')
     nx.draw_networkx_edge_labels(cleanG, pos, edge_labels=edge_labels)
