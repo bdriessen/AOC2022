@@ -8,6 +8,7 @@
 import re
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
 
 global BEST_PRESSURE_RELEASE, BEST_SOLUTION
 
@@ -56,32 +57,23 @@ def clean_graph(graph):
     return newgraph
 
 
-def solution_possible(time, maxrate, pressure_release, best_pressure_release):
-    if (pressure_release + (30 - time) * maxrate < best_pressure_release) or time > 30:
-        # This solution cannot be better than the best solution found so far
-        return False
-    else:
-        return True
-
-def score(solution, sh_pths, graph):
+def score(solution, sh_pth_length, graph):
     time = 0
     total_release = 0
     rate = 0
     last_node = solution[0]
     for node in solution[1:]:
-        path = sh_pths[last_node][node]
-        last_step = path[0]
-        for next_step in path[1:]:
-            dtime = graph.get_edge_data(last_step, next_step)['weight']
-            total_release += dtime * rate
-            time += dtime
-            last_step = next_step
+        dtime = sh_pth_length[last_node][node]
+        total_release += dtime * rate
+        time += dtime
+
         # Open valve
         time += 1
         total_release += rate
         rate += graph.nodes[node]['rate']
         last_node = node
-    # Add time to last node
+
+    # If solution complete, add release until end of time
     if len(solution) == len(graph.nodes()):
         # Solution is complete, calculate pressure release in remaining time
         dtime = 30 - time
@@ -91,22 +83,15 @@ def score(solution, sh_pths, graph):
 
 
 def solve(state, solution):
+
     global BEST_PRESSURE_RELEASE, BEST_SOLUTION
     graph = state["graph"]
-    sh_pths = state["sh_pths"]
-    time = state["time"]
-    rate = state["rate"]
+    sh_pth_length = state["sh_pth_length"]
     maxrate = state["maxrate"]
     pressure_release = state["pressure_release"]
     best_pressure_release = state["best_pressure_release"]
 
     nodes = list(graph.nodes())
-    nodes.sort()
-
-    state_res = state.copy()
-    solution_res = solution.copy()
-
-    # If solution is complete, check if it is better than the best solution found so far
 
 #    if pressure_release > BEST_PRESSURE_RELEASE and len(solution) == len(graph.nodes()):
     if pressure_release > BEST_PRESSURE_RELEASE:
@@ -124,17 +109,15 @@ def solve(state, solution):
         # Try to add node to solution
         # Calculate path to next node
         solution_new.append(node)
- #       print("Trying to extend solution with node: ", node, ", giving solution: ", solution_new)
 
-        new_pressure_release, new_rate, new_time = score(solution_new, sh_pths, graph)
+        new_pressure_release, new_rate, new_time = score(solution_new, sh_pth_length, graph)
 
- #       if solution_possible(new_time, maxrate, pressure_release, best_pressure_release):
         if new_time > 30:
             # Solution is not possible
             solution_new.pop()
             continue
 
-        state_new = {'graph': graph, 'sh_pths': sh_pths,
+        state_new = {'graph': graph, 'sh_pth_length': sh_pth_length,
                      'time': new_time, 'rate': new_rate, 'maxrate': maxrate,
                      'pressure_release': new_pressure_release,
                      'best_pressure_release': best_pressure_release}
@@ -149,6 +132,7 @@ def solve(state, solution):
 
 # Part 1
 def part1(fn):
+
     VISU = False
     global BEST_PRESSURE_RELEASE, BEST_SOLUTION
     nodes = read_input_file(fn)
@@ -167,15 +151,26 @@ def part1(fn):
         maxrate += cleanG.nodes[node]['rate']
 
     # Find all shortest paths in the graph
+    tic = time.perf_counter()
     shortest_paths = nx.shortest_path(cleanG, weight='weight')
-    #    print("A shortest paths: ", shortest_paths['AA']['HH'])
+    toc = time.perf_counter()
+    print(f"Finding all shortest paths took {toc - tic:0.4f} seconds")
 
-    state = {'graph': cleanG, 'sh_pths': shortest_paths, 'time': 0, 'rate': 0, 'maxrate': maxrate,
+    # Find all travel times for all shortest paths
+    tic = time.perf_counter()
+    shortest_path_length = dict(nx.shortest_path_length(cleanG, weight='weight'))
+    toc = time.perf_counter()
+    print(f"Finding all shortest path lengths took {toc - tic:0.4f} seconds")
+
+    state = {'graph': cleanG, 'sh_pth_length': shortest_path_length, 'time': 0, 'rate': 0, 'maxrate': maxrate,
              'pressure_release': 0, 'best_pressure_release': 0}
 
     BEST_PRESSURE_RELEASE = 0
     solution = ['AA']
+    tic = time.perf_counter()
     solve(state, solution)
+    toc = time.perf_counter()
+    print(f"Found best solution in {toc - tic:0.4f} seconds")
 
     if (VISU):
         pos = nx.spring_layout(cleanG)
