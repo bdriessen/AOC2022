@@ -88,44 +88,38 @@ def solve(state, solution):
     graph = state["graph"]
     sh_pth_length = state["sh_pth_length"]
     maxrate = state["maxrate"]
-    pressure_release = state["pressure_release"]
-    best_pressure_release = state["best_pressure_release"]
 
     nodes = list(graph.nodes())
-
-#    if pressure_release > BEST_PRESSURE_RELEASE and len(solution) == len(graph.nodes()):
-    if pressure_release > BEST_PRESSURE_RELEASE:
-        BEST_PRESSURE_RELEASE = pressure_release
-        BEST_SOLUTION = solution
-
-        print("New best solution found: ", solution, "with pressure release: ", pressure_release)
-        return
-
-    # If solution not complete, extend solution
-    solution_new = solution.copy()
 
     # Try all possibilities for next node
     for node in [n for n in nodes if n not in solution]:
         # Try to add node to solution
         # Calculate path to next node
+        solution_new = solution.copy()
+        state_new = state.copy()
+
         solution_new.append(node)
 
-        new_pressure_release, new_rate, new_time = score(solution_new, sh_pth_length, graph)
+        state_new["pressure_release"] += (sh_pth_length[solution[-1]][node] + 1) * state["rate"]
+        state_new["rate"] += graph.nodes[node]["rate"]
+        state_new["time"] += sh_pth_length[solution[-1]][node] + 1
 
-        if new_time > 30:
+        if state_new["time"] > 30 or \
+                state_new["pressure_release"] + maxrate * (30 - state_new["time"]) < BEST_PRESSURE_RELEASE:
             # Solution is not possible
-            solution_new.pop()
             continue
 
-        state_new = {'graph': graph, 'sh_pth_length': sh_pth_length,
-                     'time': new_time, 'rate': new_rate, 'maxrate': maxrate,
-                     'pressure_release': new_pressure_release,
-                     'best_pressure_release': best_pressure_release}
+        if len(solution_new) == len(graph.nodes()):
+            # Solution is complete, calculate pressure release in remaining time
+            state_new["pressure_release"] += (30 - state_new["time"]) * state_new["rate"]
+            state_new["time"] = 30
+
+        if state_new["pressure_release"] > BEST_PRESSURE_RELEASE:
+            BEST_PRESSURE_RELEASE = state_new["pressure_release"]
+            BEST_SOLUTION = solution_new
+            print("New best solution found: ", BEST_SOLUTION, "with pressure release: ", BEST_PRESSURE_RELEASE)
 
         solve(state_new, solution_new)
-
-        # Remove node from solution
-        solution_new.pop()
 
     return
 
