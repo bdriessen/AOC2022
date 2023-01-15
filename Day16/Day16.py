@@ -139,6 +139,8 @@ def part1(fn):
 
     cleanG = clean_graph(G)
 
+    print("Aantal nodes inclusief AA: ", len(cleanG.nodes()))
+
     # Find the sum of the rates of all nodes
     maxrate = 0
     for node in cleanG.nodes():
@@ -180,7 +182,7 @@ def part1(fn):
 
         plt.show()
 
-    return 0
+    return BEST_PRESSURE_RELEASE
 
 
 # Part 2
