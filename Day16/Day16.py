@@ -28,8 +28,6 @@ def read_input_file(fn):
         tokens = list(filter(None, tokens))
         node = {'name': tokens[1], 'rate': int(tokens[5]), 'to': tokens[10:]}
         nodes.append(node)
-    #    for node in nodes:
-    #        print(node)
 
     return nodes
 
@@ -46,15 +44,21 @@ def clean_graph(graph):
     for node in graph.nodes():
         if graph.nodes[node]["rate"] == 0 and len(list(graph.neighbors(node))) == 2 and not node =='AA':
             nodes_to_remove.append(node)
+        if graph.nodes[node]["rate"] == 0 and len(list(graph.neighbors(node))) == 1 and not node =='AA':
+            nodes_to_remove.append(node)
     #            print("Found node to remove: ", node)
 
     #    print("Nodes to remove: ", nodes_to_remove)
     for node in nodes_to_remove:
         neighbors = list(newgraph.neighbors(node))
-        newweight = newgraph.get_edge_data(neighbors[0], node)['weight'] + newgraph.get_edge_data(neighbors[1], node)[
-            'weight']
-        newgraph.add_edge(neighbors[0], neighbors[1], weight=newweight)
-        newgraph.remove_node(node)
+        if len(neighbors) == 2:
+            newweight = newgraph.get_edge_data(neighbors[0], node)['weight'] + newgraph.get_edge_data(neighbors[1], node)[
+                'weight']
+            newgraph.add_edge(neighbors[0], neighbors[1], weight=newweight)
+            newgraph.remove_node(node)
+        if len(neighbors) == 1:
+            newgraph.remove_node(node)
+
     return newgraph
 
 def solve(state, solution):
@@ -75,9 +79,13 @@ def solve(state, solution):
 
         solution_new.append(node)
 
-        state_new["pressure_release"] += (sh_pth_length[solution[-1]][node] + 1) * state["rate"]
+#        state_new["pressure_release"] += (sh_pth_length[solution[-1]][node] + 1) * state["rate"]
+        state_new["pressure_release"] += (sh_pth_length[solution[-1]][node]) * state["rate"]
         state_new["rate"] += graph.nodes[node]["rate"]
-        state_new["time"] += sh_pth_length[solution[-1]][node] + 1
+        state_new["time"] += sh_pth_length[solution[-1]][node]
+        if graph.nodes[node]["rate"] != 0:
+            state_new["pressure_release"] += state["rate"]
+            state_new["time"] += 1
 
         if state_new["time"] > MAX_TIME or \
                 state_new["pressure_release"] + maxrate * (MAX_TIME - state_new["time"]) < BEST_PRESSURE_RELEASE:
@@ -213,53 +221,43 @@ def part2(fn):
     ol, hu = divide_set(nodes_to_divide)
 
 
-#    for i in range(0, len(ol)):
-#        print(len(ol[i]), len(hu[i]), len(ol[i]) + len(hu[i]))
-#        print(ol[i], hu[i])
 
-    # find the best solution for each group
     best_ol = 0
     best_hu = 0
     best_ol_solution = []
     best_hu_solution = []
     best_total_pressure_release = 0
     tic = time.perf_counter()
+
+    best_hu = []
+    best_ol = []
+
     for i in range(len(ol)):
         if i % 100 == 0:
             print(i)
 
         BEST_PRESSURE_RELEASE = 0
         BEST_SOLUTION = []
-        print("Ol: before exclusion: ", ol[i])
-        print("Excludeing: ", hu[i])
         newGol = exclude_nodes(cleanG, hu[i])
-        print("Ol: after exclusion: ", list(newGol))
 
         bpr_ol, bs_ol = find_best_solution(newGol)
 
 
         BEST_PRESSURE_RELEASE = 0
         BEST_SOLUTION = []
-        print("Hu: before exclusion: ", hu[i])
-        print("Excludeing: ", ol[i])
         newGhu = exclude_nodes(cleanG, ol[i])
-        print("Hu: after exclusion: ", list(newGhu))
         bpr_hu, bs_hu = find_best_solution(newGhu)
 
         if bpr_ol + bpr_hu > best_total_pressure_release:
-#            print("Best pressure release for ol: ", bpr_ol, "with solution: ", bs_ol)
-#            print("Graph ol: ", list(newGol))
-#            print("Best pressure release for hu: ", bpr_hu, "with solution: ", bs_hu)
-#            print("Graph hu: ", list(newGhu))
             best_total_pressure_release = bpr_ol + bpr_hu
-#            print("Best total pressure release: ", best_total_pressure_release)
-#        if i==7:
-#            show_graph(newGol)
-#            show_graph(newGhu)
+            best_ol = [n for n in bs_ol if newGol.nodes[n]['rate'] > 0]
+            best_hu = [n for n in bs_hu if newGhu.nodes[n]['rate'] > 0]
 
     toc = time.perf_counter()
     print(f"Found best solution in {toc - tic:0.4f} seconds")
     print("Best total pressure release: ", best_total_pressure_release)
+    print("Best ol: ", best_ol)
+    print("Best hu: ", best_hu)
     return best_total_pressure_release
 
 
