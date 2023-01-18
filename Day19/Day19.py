@@ -13,13 +13,21 @@ def read_input_file(fn):
 
     with open(fn) as f:
         lines = f.readlines()
+    bp= []
     for line in lines:
         sections = re.split(r': ', line)[1].split('. ')
+        recipes = []
+        recipe = []
         for section in sections:
             for x, y in re.findall(r'(\d+) (\w+)', section):
-                print(x, y)
-
-    return
+                y = ['ore', 'clay', 'obsidian'].index(y)
+                recipe.append((int(x), y))
+            recipes.append(recipe)
+            recipe = []
+        bp.append(recipes)
+    for recipe in bp:
+        print(recipe)
+    return bp
 
 
 def parse_input():
