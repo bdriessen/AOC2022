@@ -40,9 +40,9 @@ def read_input_file(fn):
 
 
 def search_max_geodes(rtime, amnt, bots, bp, maxbots, cache):
-    rtime -= 1
-    amnt_ = copy.deepcopy(amnt)
-    bots_ = copy.deepcopy(bots)
+#    print("rtime: ", rtime, "amnt: ", amnt, "bots: ", bots, "maxbots: ", maxbots)
+
+    search_option = ["nothing", "other"]    # if we can build a geode, do it
 
     if rtime == 0:
         return amnt[3]
@@ -51,38 +51,44 @@ def search_max_geodes(rtime, amnt, bots, bp, maxbots, cache):
     if key in cache:
         return cache[key]
 
-    max_geodes = amnt[3] + bots[3]
+    rtime_ = rtime - 1
+    amnt_ = amnt.copy()
+    bots_ = bots.copy()
 
-    # Five options exist to choose from:
-    # 1. Do nothing
-    # 2. Make a ore bot
-    # 3. Make a clay bot
-    # 4. Make an obsidian bot
-    # 5. Make a geode bot
-    # Each option recursively calls the search_max_geodes function with the new state
+    max_geodes = amnt[3] + bots[3] * rtime # This is the amount we have at the end, but maybe we can do better
 
-    for btype, recipe in enumerate(bp):
-        # Production is identical for all bots
-#        print(btype, recipe)
-        amnt_[btype] = amnt[btype] + bots[btype]
-        bots_[btype] = min(bots[btype], maxbots[btype])  ## Limit the amount of bots to the maximum amount of bots
+    for option in search_option:
+        if option == "nothing":
+            for btype in range(4):
+                amnt_[btype] += bots[btype]
+                if bots_[btype] >= maxbots[btype] and amnt_[btype] > maxbots[btype]:
+                    amnt_[btype] = maxbots[btype]
 
-        print("amnt", amnt_, "bots", bots_)
+            max_geodes = max(max_geodes, search_max_geodes(rtime_, amnt_, bots_, bp, maxbots, cache))
+        else:
+            for btype, recipe in enumerate(bp):
+                added = False
+                # Check if we can make a bot, but only if it is useful
+                if bots[btype] < maxbots[btype]:
+                    can_make = True
+                    for cost, botcoin in recipe:
+                        if amnt[botcoin] < cost:
+                            can_make = False
+                            break
+                    if can_make:   # We can make a bot
+                        # Make a bot
+                        for cost, botcoin in recipe:
+                            amnt_[botcoin] = amnt[botcoin] - cost
+                        bots_[btype] = bots[btype] + 1
+                        added = True
+                amnt_[btype] += bots[btype]
+                if bots_[btype] >= maxbots[btype] and amnt_[btype] > maxbots[btype]:
+                    amnt_[btype] = maxbots[btype]
 
-        # Check if we can make a bot
-        can_make = True
-        for x, y in recipe:
-            if amnt_[y] < x:
-                can_make = False
-                break
-        if can_make:
-            # Make a bot
-            bots_[btype] = bots_[btype] + 1
-            amnt_[btype] = amnt_[btype] - x
-        max_geodes = max(max_geodes, search_max_geodes(rtime, amnt_, bots_, bp, maxbots, cache))
+                if added:
+                    max_geodes = max(max_geodes, search_max_geodes(rtime_, amnt_, bots_, bp, maxbots, cache))
 
     cache[key] = max_geodes
-    print(max_geodes)
     return max_geodes
 
 
@@ -92,10 +98,15 @@ def parse_input():
 # Part 1
 def part1(fn):
     bps, maxbots = read_input_file(fn)
-    for nr, bp in enumerate(bps):
-        maxbot = maxbots[nr]
-        print(maxbot)
+    print(bps[0])
+    print(maxbots[0])
+    print(bps[1])
+    print(maxbots[1])
+    for nr, bp in enumerate([bps[0]]):
+        maxbot = maxbots[bps.index(bp)]
+        print("maxbot: ", maxbot, "bp: ", bp)
         max_geodes = search_max_geodes(24, [0, 0, 0, 0], [1, 0, 0, 0], bp, maxbot, {})
+        print("max_geodes: ", max_geodes)
     return 0
 
 
