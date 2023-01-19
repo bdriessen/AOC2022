@@ -61,13 +61,17 @@ def search_max_geodes(rtime, amnt, bots, bp, maxbots, cache):
         if option == "nothing":
             for btype in range(4):
                 amnt_[btype] += bots[btype]
-                if bots_[btype] >= maxbots[btype] and amnt_[btype] > maxbots[btype]:
-                    amnt_[btype] = maxbots[btype]
+                if amnt_[btype] > maxbots[btype]*rtime_ and btype != 3:
+                    amnt_[btype] = maxbots[btype]*rtime_
 
             max_geodes = max(max_geodes, search_max_geodes(rtime_, amnt_, bots_, bp, maxbots, cache))
         else:
             for btype, recipe in enumerate(bp):
                 added = False
+                amnt_ = amnt.copy()
+                for bot in range(4):
+                    amnt_[bot] += bots[bot]
+                bots_ = bots.copy()
                 # Check if we can make a bot, but only if it is useful
                 if bots[btype] < maxbots[btype]:
                     can_make = True
@@ -76,14 +80,14 @@ def search_max_geodes(rtime, amnt, bots, bp, maxbots, cache):
                             can_make = False
                             break
                     if can_make:   # We can make a bot
-                        # Make a bot
+                        # Make a bot of type btype
                         for cost, botcoin in recipe:
-                            amnt_[botcoin] = amnt[botcoin] - cost
+                            amnt_[botcoin] -= cost
                         bots_[btype] = bots[btype] + 1
                         added = True
-                amnt_[btype] += bots[btype]
-                if bots_[btype] >= maxbots[btype] and amnt_[btype] > maxbots[btype]:
-                    amnt_[btype] = maxbots[btype]
+                for res in range(4):
+                    if amnt_[res] > maxbots[res]*rtime_ and btype != 3:
+                        amnt_[res] = maxbots[res]*rtime_
 
                 if added:
                     max_geodes = max(max_geodes, search_max_geodes(rtime_, amnt_, bots_, bp, maxbots, cache))
@@ -97,17 +101,15 @@ def parse_input():
 
 # Part 1
 def part1(fn):
+    v = 0
     bps, maxbots = read_input_file(fn)
-    print(bps[0])
-    print(maxbots[0])
-    print(bps[1])
-    print(maxbots[1])
-    for nr, bp in enumerate([bps[0]]):
+    for nr, bp in enumerate(bps):
         maxbot = maxbots[bps.index(bp)]
         print("maxbot: ", maxbot, "bp: ", bp)
         max_geodes = search_max_geodes(24, [0, 0, 0, 0], [1, 0, 0, 0], bp, maxbot, {})
         print("max_geodes: ", max_geodes)
-    return 0
+        v += max_geodes * (nr+1)
+    return v
 
 
 # Part 2

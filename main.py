@@ -9,8 +9,8 @@ from Day19 import Day19
 
 def main():
     # Read input file
-#    Day16.main(True)
-    Day19.main(False)
+    Day19.main(True)
+#    Day19.main(False)
 
     return
 
