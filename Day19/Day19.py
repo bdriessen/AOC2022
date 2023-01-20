@@ -85,8 +85,8 @@ def search_max_geodes(rtime, amnt, bots, bp, maxbots, cache):
                             amnt_[botcoin] -= cost
                         bots_[btype] = bots[btype] + 1
                         added = True
-                for res in range(4):
-                    if amnt_[res] > maxbots[res]*rtime_ and btype != 3:
+                for res in range(3):
+                    if amnt_[res] > maxbots[res]*rtime_:
                         amnt_[res] = maxbots[res]*rtime_
 
                 if added:
@@ -114,7 +114,17 @@ def part1(fn):
 
 # Part 2
 def part2(fn):
-    return 0
+    v = 1
+    bps, maxbots = read_input_file(fn)
+    for nr, bp in enumerate(bps[:3]):
+        maxbot = maxbots[bps.index(bp)]
+        print("maxbot: ", maxbot, "bp: ", bp)
+        max_geodes = search_max_geodes(32, [0, 0, 0, 0], [1, 0, 0, 0], bp, maxbot, {})
+        print("max_geodes: ", max_geodes)
+        v *= max_geodes
+
+
+    return v
 
 
 def main(realinput):
@@ -123,10 +133,10 @@ def main(realinput):
     else:
         fn = "Day19/testinput.txt"
 
-    res1 = part1(fn)
-    print("Part 1: ", res1)
-#    res2 = part2(fn)
-#    print("Part 2: ", res2)
+#    res1 = part1(fn)
+#    print("Part 1: ", res1)
+    res2 = part2(fn)
+    print("Part 2: ", res2)
     return
 
 
