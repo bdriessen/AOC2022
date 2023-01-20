@@ -4,7 +4,7 @@
 # Author: Bart Driessen
 # Start date: 2023-01-18
 # Part 1 done:
-# Part 2 done:
+# Part 2 done: 20-01-2023
 #
 import re
 import copy
