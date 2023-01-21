@@ -32,11 +32,27 @@ class GPS:
 
     def decode(self):
         # Find where to insert
-        for i in range(10):
+        started = False
+        counter = 0
+        for i in range(3010):
             idx = i % self.length
             # Find where to idx number is in the msg
             idx_in_msg = np.where(self.msg[:, 0] == idx)[0][0]
             entry = [idx, self.msg[idx_in_msg, 1]]
+            if not started:
+                if entry[1] == 0:
+                    started = True
+                    counter = 0
+            else:
+                counter += 1
+                if counter%1000 == 0 and counter > 100:
+                    print("Counter: ", counter, "Value = ", entry[1])
+                    # Find where a zero is in the msg:
+                    zero_idx = np.where(self.msg[:, 1] == 0)[0][0]
+                    # print("Zero idx: ", zero_idx)
+                    next_idx = (zero_idx + 1) % self.length
+                    value_after_zero = self.msg[next_idx, 1]
+                    print("Value after zero: ", value_after_zero)
             # Make index for this entry -1
             self.msg[idx_in_msg, 0] = -1
 
@@ -47,18 +63,19 @@ class GPS:
                 move_dist %= self.length
                 insert_idx = (idx_in_msg + move_dist + 1) % self.length
             elif move_dist < 0:
-                move_dist = (self.length - move_dist) % self.length
-                insert_idx = (idx_in_msg + move_dist + 1) % self.length
+                move_dist %= self.length
+                insert_idx = (idx_in_msg + move_dist) % self.length
             else:
                 insert_idx = (idx_in_msg + 1) % self.length
+
             # Insert
             self.msg = np.insert(self.msg, insert_idx, entry, axis=0)
             # Remove old entry
             delete_idx = np.where(self.msg[:, 0] == -1)[0][0]
             self.msg = np.delete(self.msg, delete_idx, axis=0)
-            if i % 1 == 0:
-                print("Iteration: ", i, "Index: ", idx, "Dist: ", move_dist, "New idx: ", np.where(self.msg[:, 0] == idx)[0][0])
-                print(self.msg.T)
+
+           # print("Iteration: ", i, "Index: ", idx, "Value: ", entry[1], "Dist: ", move_dist, "New idx: ", np.where(self.msg[:, 0] == idx)[0][0])
+           # print(self.msg.T)
         return
 
 
