@@ -7,46 +7,75 @@
 # Part 2 done:
 #
 
+import numpy as np
+
 # Read input file
 def read_input_file(fn):
     with open(fn) as f:
         lines = f.readlines()
+        # remove \n and empty strings
+        lines = [x.strip() for x in lines if x.strip()]
+        print(lines)
         msg = [int(x) for x in lines]
     return msg
 
 def parse_input():
     return
 
-# Part 1
-def part1(fn):
-    msg = read_input_file(fn)
-    print(msg)
-    return 0
 
 class GPS:
     def __init__(self, msg):
-        self.msg = msg
-        self.decrypted = msg
-        self.lenght = len(msg)
-        self.msg_ptr = [x for x in range(len(msg))]
-        self.msg_ptr_ptr = 0
+        self.msg = np.array(msg)
+        self.decrypted = self.msg
+        self.length = len(msg)
+        self.msg_ptr = np.arange(self.length)
         return
 
-    def insert(self, pos):
+    def decode(self):
         # Find where to insert
-        ptr = self.msg_ptr[pos]
-        val = self.decrypted[ptr]
-        val2 = self.decrypted[pos]
-        if val1 != val2:
-            print("Error")
-            return
+        for idx, item in enumerate(self.msg):
+            ptr = self.msg_ptr[idx]   # pointer points to the position in the decrypted message
+            to_move = self.decrypted[ptr]
+            if item != to_move:
+                print("Error at index", idx)
+                return
+            if item > 0:
+                move = item % self.length
+            elif item < 0:
+                # Move backwards identical to moving forward, but complemented
+                move = self.length - item % self.length
+            else:
+                move = 0
 
-        # Calculate new position
+            # Step 1: insert the item to its new position
+            new_idx = (ptr + move) % self.length
+            self.decrypted = np.insert(self.decrypted, new_idx, item)
+            # Step 2: remove the old item
+            self.decrypted = np.delete(self.decrypted, self.msg[ptr], idx)
+            # Step 3: update all affected entries in msg_ptr
+            self.msg_ptr[idx] = new_idx
+
+            if ptr + move < self.length:
+
+                ### fout!
+
+                self.msg_ptr[idx+1:new_idx] -= 1
+            if idx + move >= self.length:
+                # The item was moved beyond the end of the list
+                # Update all entries in msg_ptr
+                self.msg_ptr[idx+1:] -= 1
+                self.msg_ptr[:new_idx] -= 1
+                self.msg_ptr[0] = self.length - 1
+            print(idx, "Item: ", item, "Move: ", move, "New idx: ", new_idx, "Original list: ", self.msg, "New list: ", self.decrypted)
+        return
 
 
-
-
-
+# Part 1
+def part1(fn):
+    msg = read_input_file(fn)
+    gps = GPS(msg)
+    gps.decode()
+    return 0
 
 # Part 2
 def part2(fn):
