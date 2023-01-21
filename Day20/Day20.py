@@ -15,7 +15,6 @@ def read_input_file(fn):
         lines = f.readlines()
         # remove \n and empty strings
         lines = [x.strip() for x in lines if x.strip()]
-        print(lines)
         msg = [int(x) for x in lines]
     return msg
 
@@ -25,48 +24,41 @@ def parse_input():
 
 class GPS:
     def __init__(self, msg):
-        self.msg = np.array(msg)
-        self.decrypted = self.msg
+        msg_ = np.array(msg)
+        idx_ = np.arange(len(msg))
+        self.msg = np.c_[idx_, msg_]
         self.length = len(msg)
-        self.msg_ptr = np.arange(self.length)
         return
 
     def decode(self):
         # Find where to insert
-        for idx, item in enumerate(self.msg):
-            ptr = self.msg_ptr[idx]   # pointer points to the position in the decrypted message
-            to_move = self.decrypted[ptr]
-            if item != to_move:
-                print("Error at index", idx)
-                return
-            if item > 0:
-                move = item % self.length
-            elif item < 0:
-                # Move backwards identical to moving forward, but complemented
-                move = self.length - item % self.length
+        for i in range(10):
+            idx = i % self.length
+            # Find where to idx number is in the msg
+            idx_in_msg = np.where(self.msg[:, 0] == idx)[0][0]
+            entry = [idx, self.msg[idx_in_msg, 1]]
+            # Make index for this entry -1
+            self.msg[idx_in_msg, 0] = -1
+
+            # Find where to insert
+            move_dist = self.msg[idx_in_msg, 1]
+
+            if move_dist > 0:
+                move_dist %= self.length
+                insert_idx = (idx_in_msg + move_dist + 1) % self.length
+            elif move_dist < 0:
+                move_dist = (self.length - move_dist) % self.length
+                insert_idx = (idx_in_msg + move_dist + 1) % self.length
             else:
-                move = 0
-
-            # Step 1: insert the item to its new position
-            new_idx = (ptr + move) % self.length
-            self.decrypted = np.insert(self.decrypted, new_idx, item)
-            # Step 2: remove the old item
-            self.decrypted = np.delete(self.decrypted, self.msg[ptr], idx)
-            # Step 3: update all affected entries in msg_ptr
-            self.msg_ptr[idx] = new_idx
-
-            if ptr + move < self.length:
-
-                ### fout!
-
-                self.msg_ptr[idx+1:new_idx] -= 1
-            if idx + move >= self.length:
-                # The item was moved beyond the end of the list
-                # Update all entries in msg_ptr
-                self.msg_ptr[idx+1:] -= 1
-                self.msg_ptr[:new_idx] -= 1
-                self.msg_ptr[0] = self.length - 1
-            print(idx, "Item: ", item, "Move: ", move, "New idx: ", new_idx, "Original list: ", self.msg, "New list: ", self.decrypted)
+                insert_idx = (idx_in_msg + 1) % self.length
+            # Insert
+            self.msg = np.insert(self.msg, insert_idx, entry, axis=0)
+            # Remove old entry
+            delete_idx = np.where(self.msg[:, 0] == -1)[0][0]
+            self.msg = np.delete(self.msg, delete_idx, axis=0)
+            if i % 1 == 0:
+                print("Iteration: ", i, "Index: ", idx, "Dist: ", move_dist, "New idx: ", np.where(self.msg[:, 0] == idx)[0][0])
+                print(self.msg.T)
         return
 
 
