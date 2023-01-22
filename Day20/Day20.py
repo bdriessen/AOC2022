@@ -35,12 +35,14 @@ class GPS:
         started = False
         counter = 0
         for i in range(3010):
+            old_message = self.msg.copy()
             idx = i % self.length
             # Find where to idx number is in the msg
             idx_in_msg = np.where(self.msg[:, 0] == idx)[0][0]
             entry = [idx, self.msg[idx_in_msg, 1]]
             if not started:
                 if entry[1] == 0:
+                    print("Started at iteration", i)
                     started = True
                     counter = 0
             else:
@@ -74,8 +76,8 @@ class GPS:
             delete_idx = np.where(self.msg[:, 0] == -1)[0][0]
             self.msg = np.delete(self.msg, delete_idx, axis=0)
 
-           # print("Iteration: ", i, "Index: ", idx, "Value: ", entry[1], "Dist: ", move_dist, "New idx: ", np.where(self.msg[:, 0] == idx)[0][0])
-           # print(self.msg.T)
+            print("Counter: ", counter, "Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
+                 "New message: ", self.msg.T[1])
         return
 
 
