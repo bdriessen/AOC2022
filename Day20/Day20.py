@@ -84,20 +84,21 @@ class GPS:
             # Put in queue
             new_message = self.msg.copy()
             if not started:
-                if np.where(new_message[:, 1] == 0)[0][0] == 0:
+                if np.any(new_message[:, 1] == 0):
                     started = True
                     print("Started at iteration", i)
                     zero_idx = np.where(new_message[:, 1] == 0)[0][0]
-                    queue = new_message[:, 1]
+                    queue = new_message.copy()[:, 1]
             else:
                 counter += 1
-                queue = np.vstack((queue, new_message[:, 1]))
+                queue = np.hstack((queue, new_message[:, 1]))
+                print(queue)
 
             print("Counter: ", counter, "Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
                  "New message: ", self.msg.T[1], "Insert idx: ", insert_idx, "Delete idx: ", delete_idx)
 
         # Remove first entries from queue not equeal to zero
-        while queue[0][0] != 0:
+        while queue[0] != 0:
             queue.pop(0)
         solution = [queue[1000], queue[2000], queue[3000]]
         print("Solution: ", solution, "==>",np.sum(solution))
