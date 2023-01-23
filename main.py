@@ -1,16 +1,15 @@
 #
-# Advent of code 2022: Day 20
+# Advent of code 2022: Day 21
 #
 # Author: Bart Driessen
-# Date: 2022-01-05
+# Date: 2022-01-23
 #
 
-from Day20 import Day20
+from Day21 import Day21
 
 def main():
     # Read input file
-    Day20.main(False)
-#    Day20.main(False)
+    Day21.main()
 
     return
 

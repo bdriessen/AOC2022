@@ -24,8 +24,8 @@ def parse_input():
 
 class GPS:
     def __init__(self, msg):
-        msg_ = np.array(msg)
-        idx_ = np.arange(len(msg))
+        msg_ = np.array(msg, dtype=np.int64)
+        idx_ = np.arange(len(msg), dtype=np.int64)
         self.msg = np.c_[idx_, msg_]
         self.length = len(msg)
         return
@@ -58,25 +58,26 @@ class GPS:
             # Remove old entry
             delete_idx = np.where(self.msg[:, 0] == -1)[0][0]
             self.msg = np.delete(self.msg, delete_idx, axis=0)
-            print("Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
-                    "New message: ", self.msg.T[1])
-            old_message = self.msg.copy()
+#            print("Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
+#                    "New message: ", self.msg.T[1])
+#            old_message = self.msg.copy()
         return
 
     def find_solution(self):
         started = False
-        queue = []
+        queue = np.array([], dtype=np.int64)
         counter = 0
-        i = 0
+        counter_start = 0
         while not started or counter < 3010:
+            idx = (counter + counter_start) % self.length
             if not started:
-                if self.msg[counter % self.length, 1] == 0:
-
-                    print()
+                if self.msg[idx, 1] == 0:
                     started = True
-                    queue.append(self.msg[counter % self.length, 1])
+                    counter_start = counter
+                    counter = 0
+                    queue = np.append(queue, self.msg[idx, 1])
             else:
-                queue = np.append(queue, self.msg[counter % self.length, 1])
+                queue = np.append(queue, self.msg[idx, 1])
             counter += 1
 
         solution = [queue[1000], queue[2000], queue[3000]]
@@ -95,6 +96,14 @@ def part1(fn):
 
 # Part 2
 def part2(fn):
+    msg = read_input_file(fn)
+    for i in range(len(msg)):
+        msg[i] *= 811589153
+    gps = GPS(msg)
+    for i in range(10):
+        gps.mix()
+    gps.find_solution()
+
     return 0
 
 
@@ -104,8 +113,8 @@ def main(realinput):
     else:
         fn = "Day20/input_test.txt"
 
-    res1 = part1(fn)
-    print("Part 1: ", res1)
-#    res2 = part2(fn)
-#    print("Part 2: ", res2)
+#    res1 = part1(fn)
+#    print("Part 1: ", res1)
+    res2 = part2(fn)
+    print("Part 2: ", res2)
     return
