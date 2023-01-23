@@ -44,18 +44,47 @@ def part1(fn):
 def part2(fn):
     lines = read_input_file(fn)
     # find line starting with "root"
+    idx_humn = 0
     for idx, line in enumerate(lines):
         if line.startswith("humn"):
             idx_humn = idx
             break
-    # Replace
 
-    return 0
+    solved = False
+    human = 0
+    while not solved:
+        human_str = "humn = " + str(human)
+        print(human_str)
+        name_error_exist = True
+        while name_error_exist:
+            name_error_exist = False
+            for line in lines:
+                try:
+                    if line.startswith("humn"):
+                        exec(human_str)
+                    else:
+                        exec(line)
+                except NameError:
+                    name_error_exist = True
+            if 'root' in locals():
+                print("human: ", human, "root: ", eval('root'))
+                if eval('root') == True:
+                    solved = True
+                    break
+                else:
+                    human += 1
+                    break
+    solution = human
+    print(eval('pppw'))
+    print(eval('sjmn'))
+
+
+    return solution
 
 
 def main():
-    real = True
-    part = 1
+    real = False
+    part = 2
 
 
 
