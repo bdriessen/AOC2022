@@ -36,7 +36,7 @@ class GPS:
         counter = 0
         i = 0
         solution = []
-        queue = np.array([])
+        queue = np.array([], dtype=int)
         while not started or counter < 3010:
             i +=1
             old_message = self.msg.copy()
@@ -44,22 +44,7 @@ class GPS:
             # Find where to idx number is in the msg
             idx_in_msg = np.where(self.msg[:, 0] == idx)[0][0]
             entry = [idx, self.msg[idx_in_msg, 1]]
-            # if not started:
-            #     if entry[1] == 0:
-            #         print("Started at iteration", i)
-            #         started = True
-            #         counter = 0
-            # else:
-            #     counter += 1
-            #     if counter%1000 == 2 and counter > 100:
-            #         print("Counter: ", counter, "Value = ", entry[1])
-            #         # Find where a zero is in the msg:
-            #         zero_idx = np.where(self.msg[:, 1] == 0)[0][0]
-            #         # print("Zero idx: ", zero_idx)
-            #         next_idx = (zero_idx + 1) % self.length
-            #         value_after_zero = self.msg[next_idx, 1]
-            #         print("Value after zero: ", value_after_zero)
-            #         solution.append(value_after_zero)
+
             # Make index for this entry -1
             self.msg[idx_in_msg, 0] = -1
 
@@ -82,24 +67,18 @@ class GPS:
             self.msg = np.delete(self.msg, delete_idx, axis=0)
 
             # Put in queue
-            new_message = self.msg.copy()
             if not started:
-                if np.any(new_message[:, 1] == 0):
+                if entry[1]==0:
                     started = True
                     print("Started at iteration", i)
-                    zero_idx = np.where(new_message[:, 1] == 0)[0][0]
-                    queue = new_message.copy()[:, 1]
+                    queue = np.append(queue, entry[1])
             else:
                 counter += 1
-                queue = np.hstack((queue, new_message[:, 1]))
-                print(queue)
+                queue = np.append(queue, entry[1])
 
             print("Counter: ", counter, "Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
                  "New message: ", self.msg.T[1], "Insert idx: ", insert_idx, "Delete idx: ", delete_idx)
 
-        # Remove first entries from queue not equeal to zero
-        while queue[0] != 0:
-            queue.pop(0)
         solution = [queue[1000], queue[2000], queue[3000]]
         print("Solution: ", solution, "==>",np.sum(solution))
         return
