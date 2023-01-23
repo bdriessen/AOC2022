@@ -30,17 +30,10 @@ class GPS:
         self.length = len(msg)
         return
 
-    def decode(self):
+    def mix(self):
         # Find where to insert
-        started = False
-        counter = 0
-        i = 0
-        solution = []
-        queue = np.array([], dtype=int)
-        while not started or counter < 3010:
-            i +=1
-            old_message = self.msg.copy()
-            idx = i % self.length
+        old_message = self.msg.copy()
+        for idx in range(self.length):
             # Find where to idx number is in the msg
             idx_in_msg = np.where(self.msg[:, 0] == idx)[0][0]
             entry = [idx, self.msg[idx_in_msg, 1]]
@@ -56,7 +49,7 @@ class GPS:
                 insert_idx = (idx_in_msg + move_dist + 1) % self.length
             elif move_dist < 0:
                 move_dist %= (self.length - 1)
-                insert_idx = (idx_in_msg + move_dist) % self.length
+                insert_idx = (idx_in_msg + move_dist+1) % self.length
             else:
                 insert_idx = (idx_in_msg + 1) % self.length
 
@@ -65,30 +58,39 @@ class GPS:
             # Remove old entry
             delete_idx = np.where(self.msg[:, 0] == -1)[0][0]
             self.msg = np.delete(self.msg, delete_idx, axis=0)
+            print("Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
+                    "New message: ", self.msg.T[1])
+            old_message = self.msg.copy()
+        return
 
-            # Put in queue
+    def find_solution(self):
+        started = False
+        queue = []
+        counter = 0
+        i = 0
+        while not started or counter < 3010:
             if not started:
-                if entry[1]==0:
-                    started = True
-                    print("Started at iteration", i)
-                    queue = np.append(queue, entry[1])
-            else:
-                counter += 1
-                queue = np.append(queue, entry[1])
+                if self.msg[counter % self.length, 1] == 0:
 
-            print("Counter: ", counter, "Old message: ", old_message.T[1], "Value: ", entry[1], "Dist: ", move_dist,
-                 "New message: ", self.msg.T[1], "Insert idx: ", insert_idx, "Delete idx: ", delete_idx)
+                    print()
+                    started = True
+                    queue.append(self.msg[counter % self.length, 1])
+            else:
+                queue = np.append(queue, self.msg[counter % self.length, 1])
+            counter += 1
 
         solution = [queue[1000], queue[2000], queue[3000]]
         print("Solution: ", solution, "==>",np.sum(solution))
-        return
 
+
+        return
 
 # Part 1
 def part1(fn):
     msg = read_input_file(fn)
     gps = GPS(msg)
-    gps.decode()
+    gps.mix()
+    gps.find_solution()
     return 0
 
 # Part 2
