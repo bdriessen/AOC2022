@@ -8,7 +8,7 @@
 #
 
 import re
-
+import time
 
 # Read input file
 def read_input_file(fn):
@@ -77,27 +77,27 @@ def part2(fn):
                         exec(op1 + " = " + op2)
                 elif res in locals():
                     if op1 in locals() and op2 not in locals():
-                        if op2 == '+':
+                        if op == '+':
                             exec(op2 + " = " + res + "-" + op1)
-                        elif op2 == '*':
-                            exec(op2 + " = " + res + "//" + op1)
-                        elif op2 == '/':
-                            exec(op2 + " = " + res + "*" + op1)
-                        elif op2 == '-':
-                            exec(op2 + " = " + res + "+" + op1)
+                        elif op == '*':
+                            exec(op2 + " = " + res + "/" + op1)
+                        elif op == '/':
+                            exec(op2 + " = " + op1 + "/" + res)
+                        elif op == '-':
+                            exec(op2 + " = " + op1 + "-" + res)
                     elif op1 not in locals() and op2 in locals():
-                        if op1 == '+':
+                        if op == '+':
                             exec(op1 + " = " + res + "-" + op2)
-                        elif op1 == '*':
-                            exec(op1 + " = " + res + "//" + op2)
-                        elif op1 == '/':
+                        elif op == '*':
+                            exec(op1 + " = " + res + "/" + op2)
+                        elif op == '/':
                             exec(op1 + " = " + res + "*" + op2)
-                        elif op1 == '-':
+                        elif op == '-':
                             exec(op1 + " = " + res + "+" + op2)
                 else:
                     if op1 in locals() and op2 in locals():
                         exec(res + " = " + op1 + op + op2)
-
+#        print(locals())
         if 'humn' in locals():
             solved = True
             break
@@ -109,11 +109,12 @@ def part2(fn):
 
 
 def main():
-    real = False
+    real = True
     part = 2
 
 
-
+    # Start timer
+    tic = time.perf_counter()
     if part == 1:
         if real:
             fn = "Day21/input.txt"
@@ -128,4 +129,6 @@ def main():
             fn = "Day21/input_test.txt"
         res2 = part2(fn)
         print("Part 2: ", res2)
+    toc = time.perf_counter()
+    print(f"Time elapsed: {toc - tic:0.4f} seconds")
     return
