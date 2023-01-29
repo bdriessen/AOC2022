@@ -41,7 +41,7 @@ class Blizzards:
                 if self.state[row][col] in self.directions:
                     self.blizzards.append([row,col,self.directions[self.state[row][col]]])
                     self.blizzard_cells.append([row,col])
-        print("Blizzards:\n", self.blizzards)
+#        print("Blizzards:\n", self.blizzards)
         return
 
     def move(self):
@@ -64,6 +64,61 @@ class Blizzards:
         self.blizzard_cells = set([(x[0],x[1]) for x in self.blizzards])
         return
 
+    def print_state(self):
+        state = self.state.copy()
+        for row in range(1, len(state)-1):
+            for col in range(1, state.shape[1]-1):
+                state[row,col] = "."
+        for blizzard in self.blizzards:
+            dir = blizzard[2]
+            if dir == (-1,0):
+                state[blizzard[0],blizzard[1]] = "^"
+            elif dir == (1,0):
+                state[blizzard[0],blizzard[1]] = "v"
+            elif dir == (0,-1):
+                state[blizzard[0],blizzard[1]] = "<"
+            elif dir == (0,1):
+                state[blizzard[0],blizzard[1]] = ">"
+        for row in range(len(state)):
+            print("".join(state[row]))
+        return
+
+def avoid_blizzards(state, start, end):
+    blizzards = Blizzards(state)
+    # for i in range(10):
+    #     blizzards.move()
+    #     print(blizzards.blizzards)
+    #     print(blizzards.blizzard_cells)
+
+    solutions = set()
+
+    solutions.add(start)
+    cycle = 0
+    #    blizzards.print_state()
+    while not end in solutions:
+        cycle += 1
+        solutions_new = set()
+        blizzards.move()
+        for sol in solutions:
+            for step in [(0, 1), (0, -1), (1, 0), (-1, 0), (0, 0)]:
+                #               print(step)
+                new_pos = (sol[0] + step[0], sol[1] + step[1])
+                if new_pos[0] <= 0 or new_pos[0] >= len(blizzards.state) - 1:
+                    if new_pos != start and new_pos != end:
+                        continue
+                if new_pos[1] <= 0 or new_pos[1] >= blizzards.state.shape[1] - 1:
+                    continue
+                if not new_pos in blizzards.blizzard_cells:
+                    solutions_new.add(new_pos)
+        solutions = solutions_new.copy()
+        #       print(solutions)
+        if cycle % 1000 == 0:
+            print("Cycle: ", cycle)
+    #       blizzards.print_state()
+    #   print("Cycle: ", cycle, " Solutions: ", solutions)
+
+    return cycle
+
 # Part 1
 def part1(fn):
     state = read_input_file(fn)
@@ -72,8 +127,42 @@ def part1(fn):
     #     blizzards.move()
     #     print(blizzards.blizzards)
     #     print(blizzards.blizzard_cells)
+    start = end = (0,0)
+    solutions = set()
+    for col in range(blizzards.state.shape[1]):
+        if state[0,col] == ".":
+            start = (0,col)
+        if state[-1,col] == ".":
+            end = (len(state)-1,col)
+#    print(start, end)
 
-    return 0
+    solutions.add(start)
+    cycle = 0
+#    blizzards.print_state()
+    while not end in solutions:
+        cycle += 1
+        solutions_new = set()
+        blizzards.move()
+        for sol in solutions:
+            for step in [(0,1),(0,-1),(1,0),(-1,0),(0,0)]:
+ #               print(step)
+                new_pos = (sol[0]+step[0], sol[1]+step[1])
+                if new_pos[0] <= 0 or new_pos[0] >= len(blizzards.state)-1:
+                    if new_pos != start and new_pos != end:
+                        continue
+                if new_pos[1] <= 0 or new_pos[1] >= blizzards.state.shape[1]-1:
+                    continue
+                if not new_pos in blizzards.blizzard_cells:
+                    solutions_new.add(new_pos)
+        solutions = solutions_new.copy()
+#       print(solutions)
+        if cycle % 1000 == 0:
+            print("Cycle: ", cycle)
+ #       blizzards.print_state()
+ #   print("Cycle: ", cycle, " Solutions: ", solutions)
+
+    return cycle
+
 
 
 # Part 2
@@ -84,7 +173,7 @@ def part2(fn):
 
 
 def main():
-    real = False
+    real = True
     part = 1
 
 
