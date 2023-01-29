@@ -83,8 +83,8 @@ class Blizzards:
             print("".join(state[row]))
         return
 
-def avoid_blizzards(state, start, end):
-    blizzards = Blizzards(state)
+def avoid_blizzards(state, blizzards, start, end):
+
     # for i in range(10):
     #     blizzards.move()
     #     print(blizzards.blizzards)
@@ -123,10 +123,6 @@ def avoid_blizzards(state, start, end):
 def part1(fn):
     state = read_input_file(fn)
     blizzards = Blizzards(state)
-    # for i in range(10):
-    #     blizzards.move()
-    #     print(blizzards.blizzards)
-    #     print(blizzards.blizzard_cells)
     start = end = (0,0)
     solutions = set()
     for col in range(blizzards.state.shape[1]):
@@ -135,46 +131,36 @@ def part1(fn):
         if state[-1,col] == ".":
             end = (len(state)-1,col)
 #    print(start, end)
-
-    solutions.add(start)
-    cycle = 0
-#    blizzards.print_state()
-    while not end in solutions:
-        cycle += 1
-        solutions_new = set()
-        blizzards.move()
-        for sol in solutions:
-            for step in [(0,1),(0,-1),(1,0),(-1,0),(0,0)]:
- #               print(step)
-                new_pos = (sol[0]+step[0], sol[1]+step[1])
-                if new_pos[0] <= 0 or new_pos[0] >= len(blizzards.state)-1:
-                    if new_pos != start and new_pos != end:
-                        continue
-                if new_pos[1] <= 0 or new_pos[1] >= blizzards.state.shape[1]-1:
-                    continue
-                if not new_pos in blizzards.blizzard_cells:
-                    solutions_new.add(new_pos)
-        solutions = solutions_new.copy()
-#       print(solutions)
-        if cycle % 1000 == 0:
-            print("Cycle: ", cycle)
- #       blizzards.print_state()
- #   print("Cycle: ", cycle, " Solutions: ", solutions)
-
-    return cycle
+    t1 = avoid_blizzards(state, blizzards, start, end)
+    return t1
 
 
 
 # Part 2
 def part2(fn):
-    return 0
+    state = read_input_file(fn)
+    blizzards = Blizzards(state)
+    start = end = (0, 0)
+    solutions = set()
+    for col in range(blizzards.state.shape[1]):
+        if state[0, col] == ".":
+            start = (0, col)
+        if state[-1, col] == ".":
+            end = (len(state) - 1, col)
+    #    print(start, end)
+    t1 = avoid_blizzards(state, blizzards, start, end)
+    t2 = avoid_blizzards(state, blizzards, end, start)
+    t3 = avoid_blizzards(state, blizzards, start, end)
+    print("t1: ", t1, " t2: ", t2, " t3: ", t3)
+
+    return t1+t2+t3
 
 
 
 
 def main():
     real = True
-    part = 1
+    part = 2
 
 
     # Start timer
