@@ -5,11 +5,11 @@
 # Date: 2022-01-23
 #
 
-from Day23 import Day23
+from Day24 import Day24
 
 def main():
     # Read input file
-    Day23.main()
+    Day24.main()
 
     return
 
