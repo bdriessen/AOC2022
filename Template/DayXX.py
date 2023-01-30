@@ -5,6 +5,8 @@
 # Date: xxxx-xx-xx
 #
 
+import time
+
 # Read input file
 def read_input_file(fn):
     with open(fn, "r") as file:
@@ -12,7 +14,7 @@ def read_input_file(fn):
 
 # Parse input file
 def parse_input_file(input_file):
-    return int(input_file[0]), input_file[1].split(",")
+    return
 
 # Part 1
 def part1(fn):
@@ -27,20 +29,25 @@ def part2(fn):
     return
 
 
-if __name__ == "__main__":
+def main():
+    real = False   # True = real input, False = test input
+    part = 1
+    day = 24
 
-    testrun = True
-#    testrun = False
-
-    if testrun:
-        res1 = part1("testinput.txt")
-        print("Part 1: ", res1)
-        res2 = part2("testinput.txt")
-        print("Part 2: ", res2)
+    # Start timer
+    tic = time.perf_counter()
+    if real:
+        fn = "Day" + str(day) + "/input.txt"
     else:
-        res1 = part1("input.txt")
+        fn = "Day" + str(day) + "/input_test.txt"
+
+    if part == 1:
+        res1 = part1(fn)
         print("Part 1: ", res1)
-        res2 = part2("input.txt")
+    else:
+        res2 = part2(fn)
         print("Part 2: ", res2)
+    toc = time.perf_counter()
+    print(f"Time elapsed: {toc - tic:0.4f} seconds")
 
-
+    return
